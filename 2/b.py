@@ -2,9 +2,14 @@ with open('input.txt', "r+") as file:
   contents = file.read()
 
 def isValid(entry):
-  count = entry['password'].count(entry['char'])
-  min, max = entry['boundaries']
-  return count >= min and count <= max
+  password = entry['password']
+  char = entry['char']
+  firstIndex, secondIndex = entry['boundaries']
+  hasFirstChar = password[firstIndex - 1] == char
+  hasSecondChar = password[secondIndex - 1] == char
+  isFirstScenario = hasFirstChar and not hasSecondChar
+  isSecondScenario = hasSecondChar and not hasFirstChar
+  return (isFirstScenario) or (isSecondScenario)
 
 entries = list(filter(lambda x: x != '', contents.split('\n')))
 rawDetails = list(map(lambda x: x.split(' '), entries))
