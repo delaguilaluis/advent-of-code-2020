@@ -1,4 +1,3 @@
-from pprint import pprint
 from functools import reduce
 from re import match
 
@@ -6,18 +5,17 @@ with open("input.txt", "r+") as file:
     contents = file.read()
 
 
-def makeRangeValidator(start, end):
-    return lambda x: int(x) >= start and int(x) <= end
+def makeRangeValidator(start, stop):
+    # Force inclusive stop
+    return lambda x: int(x) in range(start, stop + 1)
 
 
 def isValidHeight(height):
-    isMeasuredInCentimeters = height.endswith("cm")
-    if isMeasuredInCentimeters:
+    if height.endswith("cm"):
         heightValue = int(height.rstrip("cm"))
         return heightValue >= 150 and heightValue <= 193
 
-    isMeasuredInInches = height.endswith("in")
-    if isMeasuredInInches:
+    if height.endswith("in"):
         heightValue = int(height.rstrip("in"))
         return heightValue >= 59 and heightValue <= 76
 
@@ -25,11 +23,11 @@ def isValidHeight(height):
 
 
 def isValidColorHex(str):
-    return len(str) == 7 and match(r"^#[a-f0-9]{6}$", str) != None
+    return match(r"^#[a-f0-9]{6}$", str) != None
 
 
-def isValidColorCode(str):
-    codes = [
+def isValidColorCode(colorCode):
+    validColorCodes = [
         "amb",
         "blu",
         "brn",
@@ -39,23 +37,11 @@ def isValidColorCode(str):
         "oth"
     ]
 
-    return any(map(lambda x: x == str, codes))
+    return any(map(lambda x: x == colorCode, validColorCodes))
 
 
-def isValidPassport(str):
-    return match(r"^\d{9}$", str) != None
-
-
-validators = {
-    "byr": makeRangeValidator(1920, 2002),
-    "iyr": makeRangeValidator(2010, 2020),
-    "eyr": makeRangeValidator(2020, 2030),
-    "hgt": isValidHeight,
-    "hcl": isValidColorHex,
-    "ecl": isValidColorCode,
-    "pid": isValidPassport,
-    "cid": lambda x: True  # Optional
-}
+def isValidPassport(passport):
+    return match(r"^\d{9}$", passport) != None
 
 
 def restructure(first, second):
@@ -80,23 +66,39 @@ def makeDictionary(propsList):
     return reduce(addProps, propsList, {})
 
 
-def makeDictionaryChecker(dict, validators):
-    return lambda key: validators[key](dict[key])
+validators = {
+    "byr": makeRangeValidator(1920, 2002),
+    "iyr": makeRangeValidator(2010, 2020),
+    "eyr": makeRangeValidator(2020, 2030),
+    "hgt": isValidHeight,
+    "hcl": isValidColorHex,
+    "ecl": isValidColorCode,
+    "pid": isValidPassport,
+    "cid": lambda x: True  # Optional
+}
 
 
-def hasValidKeys(dict):
-    return all(map(lambda x: x in dict, list(validators.keys())))
+def makeDictionaryChecker(dictionary, validators):
+    return lambda key: validators[key](dictionary[key])
 
 
-def hasValidValues(dict):
-    return all(map(makeDictionaryChecker(dict, validators), list(dict.keys())))
+def hasRequiredFields(dictionary):
+    requiredFields = list(validators.keys())
+    # `cid` is optional
+    requiredFields.remove('cid')
+    return all(map(lambda x: x in dictionary, requiredFields))
+
+
+def hasValidValues(dictionary):
+    keys = list(dictionary.keys())
+    return all(map(makeDictionaryChecker(dictionary, validators), keys))
 
 
 restructured = reduce(restructure, contents, "").rstrip()
 split = restructured.split("|")
 setOfDetails = list(map(lambda x: x.split(" "), split))
 dicts = list(map(makeDictionary, setOfDetails))
-dictsWithValidKeys = list(filter(hasValidKeys, dicts))
-dictsWithValidValues = list(filter(hasValidValues, dicts))
+dictsWithRequiredFields = list(filter(hasRequiredFields, dicts))
+dictsWithValidValues = list(filter(hasValidValues, dictsWithRequiredFields))
 
-pprint(len(dictsWithValidValues))
+print(len(dictsWithValidValues))
