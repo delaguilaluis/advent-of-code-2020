@@ -130,3 +130,6 @@ dmypy.json
 
 # Input files for Advent of Code puzzles
 */**/input.txt
+
+# VS Code
+.vscode
