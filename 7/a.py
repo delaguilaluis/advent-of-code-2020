@@ -1,4 +1,3 @@
-from pprint import pprint
 import re
 
 with open('input.txt', "r+") as file:
@@ -15,21 +14,32 @@ def formatRule(entry):
     return [formatBag(bag), list(map(formatBag, contents.split(',')))]
 
 
-def containsShinyGoldBag(rule):
+def containsBag(color, rule):
     contents = rule[1]
-    return any(map(lambda x: x == 'shiny gold', contents))
+    return any(map(lambda x: x == color, contents))
 
 
-def getContainers(color, rules):
-    # improve to seek the outermost
-    return list(filter(lambda x: x[0] == color, rules))
+def getOutermostContainers(color, rules, accum):
+    containers = list(filter(lambda x: containsBag(color, x), rules))
+
+    # Exit when no more containers are found
+    if len(containers) == 0:
+        return accum
+
+    for container in containers:
+        color = container[0]
+        if not color in accum:
+            accum.append(color)
+
+        getOutermostContainers(container[0], rules, accum)
+
+    return accum
 
 
 entries = list(filter(lambda x: x != '', contents.split('\n')))
 withoutDot = list(map(lambda x: x.strip('.'), entries))
 splitFromContents = list(map(lambda x: x.split(' contain '), withoutDot))
 rules = list(map(formatRule, splitFromContents))
-containersOfShineys = list(filter(containsShinyGoldBag, rules))
-outerMostBags = list(
-    map(lambda x: getContainers(x[0], rules), containersOfShineys))
-pprint(outerMostBags)
+omc = getOutermostContainers('shiny gold', rules, [])
+
+print(len(omc))
