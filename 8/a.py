@@ -25,7 +25,7 @@ entries = list(filter(lambda x: x != '', contents.split('\n')))
 instructions = list(map(lambda x: x.split(' '), entries))
 nextInstruction, accum, visited = [0, 0, []]
 
-# How to make it "declarative"?
+# TODO: make it "declarative" (?)
 while (find(nextInstruction, visited) == None):
     visited.append(nextInstruction)
     nextInstruction, accum = executeInstruction(
